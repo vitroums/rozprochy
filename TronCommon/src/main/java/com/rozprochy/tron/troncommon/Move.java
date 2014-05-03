@@ -6,6 +6,7 @@ import java.io.Serializable;
 public class Move implements Serializable{
     private final int playerId;
     private final Direction direction;
+
     
     public Move(int playerId, Direction direction){
         this.playerId = playerId;

@@ -1,9 +1,10 @@
 package com.rozprochy.tron.tronserver;
 
-import com.rozprochy.tron.troncommon.Move;
+import com.rozprochy.tron.troncommon.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,31 +12,41 @@ import java.util.logging.Logger;
 public class ReceiverThread implements Runnable {
 
     private Socket socket;
+    
+    private Map map;// = new Map();
 
     private static final Logger log = Logger.getLogger(ReceiverThread.class.getName());
 
-    public ReceiverThread(Socket socket) {
+    public ReceiverThread(Socket socket, Map map) {
         this.socket = socket;
+        this.map = map;
     }
 
     @Override
     public void run(){
-        try (InputStream is = socket.getInputStream(); ObjectInputStream ois = new ObjectInputStream(is)){
-            
-            Move move = (Move) ois.readObject();
-                  
+        InputStream is = null;
+        try {
+            ObjectOutputStream out = null;
+            is = socket.getInputStream();
+            ObjectInputStream ois = new ObjectInputStream(is);
+            Move move = null;     
+            try {
+                move = (Move) ois.readObject();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
             System.out.println("Odebrano " + move);
-            
+            map.Change(move);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            out.writeObject(map);
         } catch (IOException ex) {
-            log.log(Level.WARNING, ex.getMessage(), ex);
-        } catch (ClassNotFoundException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                socket.close();
+                is.close();
             } catch (IOException ex) {
-                log.log(Level.WARNING, ex.getMessage(), ex);
+                Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }
+       }
 }

@@ -13,6 +13,7 @@ public class FXMLController implements Initializable {
     
     @FXML
     private Canvas canvas;
+    MapView mapView;
     
     @FXML
     private void handleButtonAction(ActionEvent event) {
@@ -23,6 +24,6 @@ public class FXMLController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        mapView = new MapView(canvas);
     }    
 }
