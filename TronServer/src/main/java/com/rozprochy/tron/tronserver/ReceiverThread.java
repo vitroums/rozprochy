@@ -1,10 +1,8 @@
 package com.rozprochy.tron.tronserver;
 
 import com.rozprochy.tron.troncommon.*;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -13,22 +11,21 @@ import java.util.logging.Logger;
 
 public class ReceiverThread implements Runnable {
 
-    private Socket socket;
+    private static Socket socket;
     
-    private Map map;// = new Map();
+    private GameModel model;
 
     private static final Logger log = Logger.getLogger(ReceiverThread.class.getName());
 
-    public ReceiverThread(Socket socket, Map map) {
+    public ReceiverThread(Socket socket, GameModel model) {
         this.socket = socket;
-        this.map = map;
+        this.model = model;
     }
 
     @Override
     public void run(){
         InputStream is = null;
         try {
-            ObjectOutputStream out = null;
             is = socket.getInputStream();
             ObjectInputStream ois = new ObjectInputStream(is);
             Move move = null;     
@@ -38,9 +35,11 @@ public class ReceiverThread implements Runnable {
                 Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
             }
             System.out.println("Odebrano " + move);
-            map.Change(move);
-            out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(map);
+            
+            
+            model.Change(move);
+            
+            
         } catch (IOException ex) {
             Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
