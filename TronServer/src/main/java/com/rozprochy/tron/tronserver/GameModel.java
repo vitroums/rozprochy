@@ -34,7 +34,7 @@ public final class GameModel {
         map[xSize - 1][0] = 1;
         map[xSize - 1][ySize - 1] = 2;
         map[0][ySize - 1] = 3;
-        //ReceiverThread.send(new Map(map));
+        ServerThread.m = new Map(map);
     }
     public void Change(Move move){
         if(move.isMove())

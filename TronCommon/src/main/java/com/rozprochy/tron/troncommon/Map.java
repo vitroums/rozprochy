@@ -33,4 +33,10 @@ public class Map implements Serializable{
     public int getWinningPlayer() {
         return winningPlayer;
     }
+
+    @Override
+    public String toString() {
+        return "Map{" + "field=" + field + ", pause=" + pause + ", won=" + won + ", winningPlayer=" + winningPlayer + '}';
+    }
+    
 }

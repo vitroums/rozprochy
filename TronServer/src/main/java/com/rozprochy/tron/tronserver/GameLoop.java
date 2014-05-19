@@ -20,12 +20,10 @@ public class GameLoop implements Runnable{
        pause = false;
        model.InitGame();
        while(gameIsRunning){
-           /*tu gdzie komentarze trzeba wysyłać mape do klientów*/
-           //ReceiverThread.send(new Map(model.getMap()));
            try { 
                Thread.sleep(50);
                if(pause){
-                   //ReceiverThread.send(new Map(model.getMap(), true));
+                   ServerThread.m = new Map(model.getMap(), true);
                    while(pause)
                        Thread.sleep(50);
                }
@@ -35,11 +33,11 @@ public class GameLoop implements Runnable{
            model.Go();
            if(model.GameWon()){
                gameIsRunning = false;
-               //ReceiverThread.send(new Map(model.getMap(), true, 0));
+               ServerThread.m = (new Map(model.getMap(), true, 0));
            }
            if(model.GameLost()){
                gameIsRunning = false;
-              // ReceiverThread.send(new Map(model.getMap(), true, 1));
+               ServerThread.m = new Map(model.getMap(), true, 1);
            }
        }
        stopGame();

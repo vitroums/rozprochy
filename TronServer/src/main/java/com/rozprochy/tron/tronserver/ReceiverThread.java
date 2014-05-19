@@ -26,6 +26,7 @@ public class ReceiverThread implements Runnable {
     public void run(){
         InputStream is = null;
         try {
+            ObjectOutputStream out = null;
             is = socket.getInputStream();
             ObjectInputStream ois = new ObjectInputStream(is);
             Move move = null;     
@@ -34,11 +35,12 @@ public class ReceiverThread implements Runnable {
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
             }
-            System.out.println("Odebrano " + move);
-            
-            
-            model.Change(move);
-            
+            if(move != null){
+                System.out.println("Odebrano " + move);
+                model.Change(move);
+            }
+            out = new ObjectOutputStream(socket.getOutputStream());
+            out.writeObject(ServerThread.m);
             
         } catch (IOException ex) {
             Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);

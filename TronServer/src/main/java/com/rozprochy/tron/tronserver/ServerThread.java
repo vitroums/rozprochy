@@ -24,8 +24,9 @@ public class ServerThread implements Runnable {
 
     private boolean running = true;
     
+    public static Map m = null;
+    
     private GameModel model = new GameModel();
-    /*w GameLoop trzeba wysyłać kilka razy na sekunde mape do klientów*/
     private int counter = 0;
     
     //private Vector clients = new Vector();

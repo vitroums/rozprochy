@@ -36,6 +36,8 @@ public class MainApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         view = new GameView(canvas, unit, x/unit, (y - offset)/unit, offset);
+        ServerListener listener = new ServerListener(view);
+        listener.start();
     }
     
     public static void main(String[] args) {
@@ -58,18 +60,17 @@ public class MainApp extends Application {
                 else if (key.getCode() == KeyCode.P)
                     move = new Move(true);
                 else if (key.getCode() == KeyCode.N)
-                    move = new Move(false);     
-                if(move != null){
+                    move = new Move(false);  
+                    Socket client = null;
                     try {
-                        Socket client = new Socket("localhost", 6066);
+                        client = new Socket("localhost", 6066);
                         ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
                         os.writeObject(move);
                     } catch (IOException ex) {
                         Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    /*InputStream inFromServer = null;
+                    InputStream inFromServer = null;
                     try {
-                        Socket client = new Socket("localhost", 6066);
                         inFromServer = client.getInputStream();
                         ObjectInputStream ois = new ObjectInputStream(inFromServer);
                         Map map = null;
@@ -87,8 +88,7 @@ public class MainApp extends Application {
                         } catch (IOException ex) {
                             Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    }*/
-                }
+                    }
         }
     }
 }
