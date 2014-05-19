@@ -16,8 +16,6 @@ public class ServerListener implements Runnable{
    ServerListener(GameView view){
        this.view = view;
    }
-   /* teraz jest źle i nie działa. Trzeba zrobić żeby co kilka razy na sekunde łapało mape z serwera i ją wyswietlało*/
-   
    @Override
    public void run(){
        while(true){
