@@ -16,6 +16,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 
 public class MainApp extends Application {
     private final int x = 640;
@@ -23,7 +24,7 @@ public class MainApp extends Application {
     private final int unit = 10;
     private final int offset = 20;
     private GameView view;
-    
+
     @Override
     public void start(Stage primaryStage) {
         Canvas canvas = new Canvas(x, y);
@@ -35,60 +36,52 @@ public class MainApp extends Application {
         primaryStage.setTitle("Tron");
         primaryStage.setScene(scene);
         primaryStage.show();
-        view = new GameView(canvas, unit, x/unit, (y - offset)/unit, offset);
+        view = new GameView(canvas, unit, x / unit, (y - offset) / unit, offset);
         ServerListener listener = new ServerListener(view);
         listener.start();
     }
-    
+
     public static void main(String[] args) {
         launch(args);
     }
-    
+
     private class ControllerEventHandler implements EventHandler<KeyEvent> {
         //strzałki z jakiegoś powodu nie działają
         @Override
-        public void handle(KeyEvent key){
-                Move move = null;
-                if (key.getCode() == KeyCode.W)
-                    move = new Move(0, Direction.UP);
-                else if (key.getCode() == KeyCode.S)
-                    move = new Move(0, Direction.DOWN);
-                else if (key.getCode() == KeyCode.D)
-                    move = new Move(0, Direction.RIGHT);
-                else if (key.getCode() == KeyCode.A)
-                    move = new Move(0, Direction.LEFT);
-                else if (key.getCode() == KeyCode.P)
-                    move = new Move(true);
-                else if (key.getCode() == KeyCode.N)
-                    move = new Move(false);  
-                    Socket client = null;
-                    try {
-                        client = new Socket("localhost", 6066);
-                        ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
-                        os.writeObject(move);
-                    } catch (IOException ex) {
-                        Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    InputStream inFromServer = null;
-                    try {
-                        inFromServer = client.getInputStream();
-                        ObjectInputStream ois = new ObjectInputStream(inFromServer);
-                        Map map = null;
-                        try {
-                            map = (Map) ois.readObject();
-                        } catch (ClassNotFoundException ex) {
-                            Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+        public void handle(KeyEvent key) {
+            Move move = null;
+            if (key.getCode() == KeyCode.W) {
+                move = new Move(0, Direction.UP);
+            } else if (key.getCode() == KeyCode.S) {
+                move = new Move(0, Direction.DOWN);
+            } else if (key.getCode() == KeyCode.D) {
+                move = new Move(0, Direction.RIGHT);
+            } else if (key.getCode() == KeyCode.A) {
+                move = new Move(0, Direction.LEFT);
+            } else if (key.getCode() == KeyCode.P) {
+                move = new Move(true);
+            } else if (key.getCode() == KeyCode.N) {
+                move = new Move(false);
+            }
+
+            try (
+                    Socket client = new Socket("localhost", 6066);
+                    ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+                    ObjectInputStream ois = new ObjectInputStream(client.getInputStream());) {
+                oos.writeObject(move);
+
+                final Map map = (Map) ois.readObject();
+
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
                         view.Display(map);
-                    } catch (IOException ex) {
-                        Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
-                    } finally {
-                        try {
-                            inFromServer.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
-                        }
                     }
+                });
+
+            } catch (IOException | ClassNotFoundException ex) {
+                Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }
