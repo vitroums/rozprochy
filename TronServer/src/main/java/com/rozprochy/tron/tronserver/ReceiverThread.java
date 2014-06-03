@@ -2,7 +2,6 @@ package com.rozprochy.tron.tronserver;
 
 import com.rozprochy.tron.troncommon.*;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -23,33 +22,22 @@ public class ReceiverThread implements Runnable {
     }
 
     @Override
-    public void run(){
-        InputStream is = null;
-        try {
-            ObjectOutputStream out = null;
-            is = socket.getInputStream();
-            ObjectInputStream ois = new ObjectInputStream(is);
-            Move move = null;     
-            try {
-                move = (Move) ois.readObject();
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            if(move != null){
+    public void run() {
+
+        try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream()); ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());) {
+
+            Move move = (Move) ois.readObject();
+
+            if (move != null) {
                 System.out.println("Odebrano " + move);
                 model.Change(move);
             }
-            out = new ObjectOutputStream(socket.getOutputStream());
+
             out.writeObject(ServerThread.m);
-            
-        } catch (IOException ex) {
+
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                is.close();
-            } catch (IOException ex) {
-                Logger.getLogger(ReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
-       }
+
+    }
 }
