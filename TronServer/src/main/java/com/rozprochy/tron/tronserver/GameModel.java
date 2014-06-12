@@ -1,103 +1,136 @@
 package com.rozprochy.tron.tronserver;
 
-import com.rozprochy.tron.troncommon.*;
+import com.rozprochy.tron.troncommon.Direction;
+import com.rozprochy.tron.troncommon.Move;
+import java.util.concurrent.locks.Lock;
 
-public final class GameModel { 
-    private final int x = 640;
-    private final int y = 480;
+public final class GameModel {
+
     private final int unit = 10;
     private final int offset = 20;
     private final int xSize;
     private final int ySize;
     private final int[][] map;
-    private final Player player[];
-    private final GameLoop loop;
-    
-    public GameModel(){
-        xSize = x/unit;
-        ySize = (y - offset)/unit;
+    private final Player[] players = new Player[4];
+    private Lock mapLock;
+
+    public GameModel( int x, int y, Lock mapLock) {
+        xSize = x / unit;
+        ySize = (y - offset) / unit;
         map = new int[xSize][ySize];
-        player = new Player[4];
         InitGame();
-        loop = new GameLoop(this);
+        this.mapLock = mapLock;
     }
-    public void InitGame(){
-        player[0] = new Player(this,0,0,true,Direction.RIGHT);
-        player[1] = new Player(this,xSize - 1,0,false,Direction.DOWN);
-        player[2] = new Player(this,xSize - 1,ySize - 1,false,Direction.LEFT);
-        player[3] = new Player(this,0,ySize - 1,false,Direction.UP);
-     
-        for(int i = 0; i < xSize; i++)
-            for(int j = 0; j < ySize; j++)
+
+    public void InitGame() {
+        players[0] = new Player(0, this, 0, 0, Direction.RIGHT);
+        players[1] = new Player(1, this, xSize - 1, 0, Direction.DOWN);
+        players[2] = new Player(2, this, xSize - 1, ySize - 1, Direction.LEFT);
+        players[3] = new Player(3, this, 0, ySize - 1, Direction.UP);
+
+        for (int i = 0; i < xSize; i++) {
+            for (int j = 0; j < ySize; j++) {
                 map[i][j] = -1;
+            }
+        }
         map[0][0] = 0;
         map[xSize - 1][0] = 1;
         map[xSize - 1][ySize - 1] = 2;
         map[0][ySize - 1] = 3;
-        ServerThread.m = new Map(map);
     }
-    public void Change(Move move){
-        if(move.isMove())
-            player[move.getPlayerId()].setDirection(move.getDirection());
-        else{
-            if(move.isPause())
-                changePause();
-            else{
-                if(!gameRunning())
-                    newGame();
-                else
-                    stopGame();
+
+    public void change(Move move) {
+        players[move.getPlayerId()].setDirection(move.getDirection());
+    }
+
+    public int[][] cloneMap() {
+        return map.clone();
+    }
+    
+    public int[][] getMap()
+    {
+        return map;
+    }
+
+    public void Go() {
+
+        /*for (int i = 0; i < 4; i++) {
+            if (players[i].isAlive()) {
+                players[i].decide();
+            }
+        }*/
+
+        mapLock.lock();
+        try
+        {
+            for (int i = 0; i < 4; i++) 
+            {
+                if (players[i].isAlive()) 
+                {
+                    if (players[i].getDirection() == Direction.UP) {
+                        players[i].decY();
+                    }
+                    if (players[i].getDirection() == Direction.DOWN) {
+                        players[i].incY();
+                    }
+                    if (players[i].getDirection() == Direction.LEFT) {
+                        players[i].decX();
+                    }
+                    if (players[i].getDirection() == Direction.RIGHT) {
+                        players[i].incX();
+                    }
+                    if (players[i].isAlive()) {
+                        map[players[i].getX()][players[i].getY()] = i;
+                    }
+                }
             }
         }
-    }    
-    public  void Go(){
-        for(int i = 0; i < 4; i++){
-            if(player[i].isAlive()){
-                if(player[i].getDirection() == Direction.UP)
-                    player[i].decY();
-                if(player[i].getDirection() == Direction.DOWN)
-                    player[i].incY();
-                if(player[i].getDirection() == Direction.LEFT)
-                    player[i].decX();
-                if(player[i].getDirection() == Direction.RIGHT)
-                    player[i].incX();
-                if(player[i].isAlive())
-                    map[player[i].getX()][player[i].getY()] = i;
-             }
+        finally
+        {
+            mapLock.unlock();
         }
-    }    
-    public  int ReadMap(int x, int y){
+        
+
+    }
+
+    public int readMap(int x, int y) {
         return map[x][y];
     }
-    public  boolean GameWon(){
-        return (player[0].isAlive() && !player[1].isAlive() && !player[2].isAlive() && !player[3].isAlive());
+
+    public boolean gameWon() {
+        return (players[0].isAlive() && !players[1].isAlive() && !players[2].isAlive() && !players[3].isAlive());
     }
-    public  boolean GameLost(){
-           return !player[0].isAlive();
+    
+    public int whoWin() {
+        if(players[0].isAlive() && !players[1].isAlive() && !players[2].isAlive() && !players[3].isAlive())
+            return 1;
+        else if(players[1].isAlive() && !players[0].isAlive() && !players[2].isAlive() && !players[3].isAlive())
+            return 2;
+        else if(players[2].isAlive() && !players[0].isAlive() && !players[1].isAlive() && !players[3].isAlive())
+            return 3;
+        else if(players[3].isAlive() && !players[0].isAlive() && !players[2].isAlive() && !players[1].isAlive())
+            return 4;
+        return 0;
     }
+
+    public boolean gameLost() {
+        return !players[0].isAlive();
+    }
+
     public int getUnit() {
         return unit;
     }
-    public void changePause(){
-        loop.changePause();
-    }
-    public boolean gameRunning(){
-        return loop.isGameIsRunning();
-    }
-    public void newGame(){
-        loop.start();
-    }
-    public void stopGame(){
-        loop.stopGame();
-        InitGame();
-    }
-    public  int getxSize() {
+
+    public int getxSize() {
         return xSize;
     }
-    public  int getySize() {
+
+    public int getySize() {
         return ySize;
     }
-    public int[][] getMap() {
-        return map;
+
+    public Player[] getPlayers() {
+        return players;
     }
+
 }

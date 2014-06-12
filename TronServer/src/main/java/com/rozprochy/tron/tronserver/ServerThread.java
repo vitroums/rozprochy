@@ -1,11 +1,14 @@
 package com.rozprochy.tron.tronserver;
 
-import com.rozprochy.tron.troncommon.*;
+import com.rozprochy.tron.troncommon.Move;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,19 +27,32 @@ public class ServerThread implements Runnable {
 
     private boolean running = true;
     
-    public static Map m = null;
+    private ConcurrentLinkedQueue<Move> moves = new ConcurrentLinkedQueue<Move>();
     
-    private GameModel model = new GameModel();
-    private int counter = 0;
+    private int playerID = 0;
     
-    //private Vector clients = new Vector();
+    private ReadWriteLock mapLock = new ReentrantReadWriteLock();
     
-    //private int lastID = -1;
+    private final int[][] map;
+    
+    private final String message = "";
+    
+    private GameModel model;
+            
+    ServerThread()
+    {
+        model = new GameModel(640, 480, mapLock.writeLock());
+        map = model.getMap();
+    }
     
     @Override
     public void run() {
         
-        try (ServerSocket server = new ServerSocket(PORT)) {
+        try (ServerSocket server = new ServerSocket(PORT)) 
+        {
+            ServerGameLoop loop = new ServerGameLoop(moves, model, message);
+            Thread loopTh = new Thread(loop);
+            loopTh.start();
             server.setSoTimeout(TIME_OUT);
             while (true) {
                 synchronized (this) {
@@ -47,6 +63,7 @@ public class ServerThread implements Runnable {
                 try {
                     Socket client = server.accept();
                     if (client != null) {
+                        client.setTcpNoDelay(true);
                         semService(available, client);
                     }
                 } catch (SocketTimeoutException ex) {}
@@ -65,11 +82,10 @@ public class ServerThread implements Runnable {
         try {
             sem.acquire();
             try {
-                ReceiverThread receiver = new ReceiverThread(client, model);
+                SendingThread receiver = new SendingThread(client, moves, playerID++, map, message, mapLock.readLock());
                 Thread th = new Thread(receiver);
                 th.start();
-                counter++;
-                System.out.println(counter);
+                System.out.printf("Started client thread #%d\n", playerID);
             } finally {
                 sem.release();
             }
