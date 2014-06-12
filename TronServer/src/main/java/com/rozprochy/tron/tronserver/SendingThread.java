@@ -21,7 +21,7 @@ public class SendingThread implements Runnable {
     
     private final int[][] map;
     
-    private String message;
+    public static String message;
     
     private Lock mapReadingLock;
 

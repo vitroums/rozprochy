@@ -35,7 +35,7 @@ public class ServerThread implements Runnable {
     
     private final int[][] map;
     
-    private final String message = "";
+    private String message = "";
     
     private GameModel model;
             

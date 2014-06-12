@@ -110,6 +110,8 @@ public final class GameModel {
             return 3;
         else if(players[3].isAlive() && !players[0].isAlive() && !players[2].isAlive() && !players[1].isAlive())
             return 4;
+        else if(!players[3].isAlive() && !players[0].isAlive() && !players[2].isAlive() && !players[1].isAlive())
+            return -1;
         return 0;
     }
 
@@ -132,5 +134,10 @@ public final class GameModel {
     public Player[] getPlayers() {
         return players;
     }
+
+    public Lock getMapLock() {
+        return mapLock;
+    }
+    
 
 }
