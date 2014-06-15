@@ -48,6 +48,7 @@ public class ClientGameLoop implements Runnable{
                 ObjectInputStream ois = new ObjectInputStream(client.getInputStream());) {   
             
             playerID = ois.readInt();
+            view.setPlayerId(playerID);
             while(true)
             {
                 while(!moves.isEmpty())

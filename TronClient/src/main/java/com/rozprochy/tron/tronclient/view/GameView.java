@@ -11,13 +11,15 @@ import javafx.scene.text.Font;
 
 public final class GameView {
 
+    private int playerId;
     private final int unit;
     private final int offset;
     private final int xSize;
     private final int ySize;
     private final int x;
     private final int y;
-    private final Color color[] = {Color.BLUE, Color.RED, Color.GOLD, Color.GREEN};
+    private final Color color[] = {Color.BLUE, Color.RED, Color.YELLOW, Color.ORANGE};
+    private final String playerColor[] = {"BLUE", "RED", "YELLOW", "ORANGE"};
     private final GraphicsContext gc;
 
     public GameView(Canvas canvas, int unit, int x, int y, int offset) {
@@ -54,7 +56,7 @@ public final class GameView {
         gc.fillRect(0, 0, unit * xSize, unit * ySize + offset);
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("Verdana", 15));
-        gc.fillText("WSAD - steering", 0, offset - 5);
+        gc.fillText("WSAD - steering,     player color: " + playerColor[playerId], 0, offset - 5);
         gc.setLineWidth(1);
         gc.setStroke(Color.WHITE);
         gc.strokeLine(0, offset - 1, xSize * unit, offset - 1);
@@ -84,5 +86,8 @@ public final class GameView {
         float textY = (y - h) / 2;
         float textX = (x - w) / 2;
         gc.fillText(text, textX, textY);
+    }
+    public void setPlayerId(int playerId) {
+        this.playerId = playerId;
     }
 }
